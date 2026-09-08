@@ -147,9 +147,16 @@ create table if not exists public.visits (
   customer_id uuid not null references public.customers (id) on delete cascade,
   amount_spent numeric(10, 2) not null check (amount_spent >= 0),
   points_earned integer not null check (points_earned >= 0),
-  staff_id uuid references public.profiles (id),
+  staff_id uuid references public.profiles (id) on delete set null,
   visit_date timestamptz not null default now()
 );
+
+-- Deleting a staff account must never break or block-delete their past visits —
+-- it just leaves staff_id null (shown as "former staff" in the app).
+alter table public.visits drop constraint if exists visits_staff_id_fkey;
+alter table public.visits
+  add constraint visits_staff_id_fkey
+  foreign key (staff_id) references public.profiles (id) on delete set null;
 
 create index if not exists visits_customer_idx on public.visits (customer_id, visit_date desc);
 create index if not exists visits_date_idx on public.visits (visit_date desc);
@@ -178,9 +185,14 @@ create table if not exists public.redemptions (
   customer_id uuid not null references public.customers (id) on delete cascade,
   reward_id uuid not null references public.rewards (id),
   points_used integer not null check (points_used > 0),
-  staff_id uuid references public.profiles (id),
+  staff_id uuid references public.profiles (id) on delete set null,
   redeemed_at timestamptz not null default now()
 );
+
+alter table public.redemptions drop constraint if exists redemptions_staff_id_fkey;
+alter table public.redemptions
+  add constraint redemptions_staff_id_fkey
+  foreign key (staff_id) references public.profiles (id) on delete set null;
 
 create index if not exists redemptions_customer_idx on public.redemptions (customer_id, redeemed_at desc);
 

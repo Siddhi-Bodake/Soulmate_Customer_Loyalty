@@ -53,3 +53,20 @@ export async function setStaffActive(userId: string, active: boolean) {
   revalidatePath("/staff");
   return { error: undefined } as const;
 }
+
+export async function deleteStaffAccount(userId: string) {
+  const owner = await requireOwner();
+
+  if (userId === owner.id) {
+    return { error: "You can't delete your own account." } as const;
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.deleteUser(userId);
+
+  if (error) return { error: error.message } as const;
+
+  revalidatePath("/staff");
+  revalidatePath("/customers");
+  return { error: undefined } as const;
+}

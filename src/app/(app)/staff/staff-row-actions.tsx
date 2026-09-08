@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { UserX, UserCheck } from "lucide-react";
+import { UserX, UserCheck, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { setStaffActive } from "./actions";
+import { setStaffActive, deleteStaffAccount } from "./actions";
 
 export function StaffRowActions({
   userId,
@@ -23,10 +23,10 @@ export function StaffRowActions({
   fullName: string;
   isBanned: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<"toggle" | "delete" | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function confirm() {
+  function confirmToggle() {
     startTransition(async () => {
       const result = await setStaffActive(userId, isBanned);
       if (result?.error) {
@@ -34,23 +34,46 @@ export function StaffRowActions({
       } else {
         toast.success(isBanned ? `${fullName} reactivated` : `${fullName} deactivated`);
       }
-      setOpen(false);
+      setConfirmAction(null);
+    });
+  }
+
+  function confirmDelete() {
+    startTransition(async () => {
+      const result = await deleteStaffAccount(userId);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(`${fullName} deleted`);
+      }
+      setConfirmAction(null);
     });
   }
 
   return (
     <>
-      <Button
-        variant={isBanned ? "outline" : "ghost"}
-        size="sm"
-        onClick={() => setOpen(true)}
-        className={isBanned ? "" : "text-destructive hover:text-destructive"}
-      >
-        {isBanned ? <UserCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
-        {isBanned ? "Reactivate" : "Deactivate"}
-      </Button>
+      <div className="flex items-center gap-1">
+        <Button
+          variant={isBanned ? "outline" : "ghost"}
+          size="sm"
+          onClick={() => setConfirmAction("toggle")}
+          className={isBanned ? "" : "text-destructive hover:text-destructive"}
+        >
+          {isBanned ? <UserCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
+          {isBanned ? "Reactivate" : "Deactivate"}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setConfirmAction("delete")}
+          className="text-destructive hover:text-destructive"
+        >
+          <Trash2 className="h-4 w-4" />
+          Delete
+        </Button>
+      </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={confirmAction === "toggle"} onOpenChange={(o) => !o && setConfirmAction(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -63,15 +86,37 @@ export function StaffRowActions({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setConfirmAction(null)}>
               Cancel
             </Button>
             <Button
               variant={isBanned ? "default" : "destructive"}
               disabled={pending}
-              onClick={confirm}
+              onClick={confirmToggle}
             >
               {pending ? "Saving…" : isBanned ? "Reactivate" : "Deactivate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmAction === "delete"} onOpenChange={(o) => !o && setConfirmAction(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Permanently delete {fullName}?</DialogTitle>
+            <DialogDescription>
+              This removes their login entirely — it can&apos;t be undone (unlike Deactivate).
+              Any visits or redemptions they recorded stay in your history, just without a name
+              attached to them. If you might want them back later, use{" "}
+              <span className="font-medium text-foreground">Deactivate</span> instead.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmAction(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" disabled={pending} onClick={confirmDelete}>
+              {pending ? "Deleting…" : "Delete Permanently"}
             </Button>
           </DialogFooter>
         </DialogContent>
