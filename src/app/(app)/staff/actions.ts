@@ -30,3 +30,26 @@ export async function createStaffAccount(formData: FormData) {
   revalidatePath("/staff");
   return { error: undefined } as const;
 }
+
+// A very long ban duration effectively deactivates the login forever,
+// without deleting the account — their name stays attached to any
+// visits/redemptions they've already recorded.
+const PERMANENT_BAN = "876000h"; // 100 years
+
+export async function setStaffActive(userId: string, active: boolean) {
+  const owner = await requireOwner();
+
+  if (userId === owner.id) {
+    return { error: "You can't deactivate your own account." } as const;
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.updateUserById(userId, {
+    ban_duration: active ? "none" : PERMANENT_BAN,
+  });
+
+  if (error) return { error: error.message } as const;
+
+  revalidatePath("/staff");
+  return { error: undefined } as const;
+}
