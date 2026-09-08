@@ -1,7 +1,7 @@
 import { requireStaff } from "@/lib/auth";
 import { AppSidebar } from "@/components/app-sidebar";
 import { MobileNav } from "@/components/mobile-nav";
-import { LogoutButton } from "@/components/logout-button";
+import { AccountMenu } from "@/components/account-menu";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireStaff();
@@ -20,7 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <MobileNav fullName={profile.full_name} role={profile.role} />
             <span className="font-heading text-lg font-bold md:hidden">Soulmate</span>
           </div>
-          <LogoutButton />
+          <AccountMenu fullName={profile.full_name} />
         </header>
 
         <main className="flex-1 p-4 md:p-8">{children}</main>
