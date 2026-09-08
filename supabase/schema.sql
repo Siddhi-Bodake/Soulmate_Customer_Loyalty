@@ -1,6 +1,9 @@
 -- ============================================================================
--- Brew Rewards — Cafe Customer Loyalty System
--- Run this whole file once in: Supabase Dashboard → SQL Editor → New query
+-- Soulmate Cafe & Celebration House — Customer Loyalty System
+-- Safe to re-run any time this file changes: every statement is idempotent
+-- (create-if-not-exists / create-or-replace / drop-if-exists-then-create),
+-- so re-pasting the whole file in Supabase Dashboard → SQL Editor → Run
+-- will never duplicate data or error on "already exists".
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
@@ -29,6 +32,7 @@ as $$
   );
 $$;
 
+drop policy if exists "Staff can view all profiles" on public.profiles;
 create policy "Staff can view all profiles"
   on public.profiles for select
   to authenticated
@@ -81,21 +85,25 @@ create index if not exists customers_phone_idx on public.customers (phone);
 
 alter table public.customers enable row level security;
 
+drop policy if exists "Staff can view customers" on public.customers;
 create policy "Staff can view customers"
   on public.customers for select
   to authenticated
   using (true);
 
+drop policy if exists "Staff can add customers" on public.customers;
 create policy "Staff can add customers"
   on public.customers for insert
   to authenticated
   with check (true);
 
+drop policy if exists "Staff can edit customers" on public.customers;
 create policy "Staff can edit customers"
   on public.customers for update
   to authenticated
   using (true);
 
+drop policy if exists "Owners can delete customers" on public.customers;
 create policy "Owners can delete customers"
   on public.customers for delete
   to authenticated
@@ -114,11 +122,13 @@ create table if not exists public.rewards (
 
 alter table public.rewards enable row level security;
 
+drop policy if exists "Staff can view rewards" on public.rewards;
 create policy "Staff can view rewards"
   on public.rewards for select
   to authenticated
   using (true);
 
+drop policy if exists "Owners can manage rewards" on public.rewards;
 create policy "Owners can manage rewards"
   on public.rewards for all
   to authenticated
@@ -142,6 +152,7 @@ create index if not exists visits_date_idx on public.visits (visit_date desc);
 
 alter table public.visits enable row level security;
 
+drop policy if exists "Staff can view visits" on public.visits;
 create policy "Staff can view visits"
   on public.visits for select
   to authenticated
@@ -149,6 +160,7 @@ create policy "Staff can view visits"
 
 -- inserts happen exclusively through record_visit() below, but a direct
 -- insert policy is kept too in case it's ever called outside the RPC.
+drop policy if exists "Staff can log visits" on public.visits;
 create policy "Staff can log visits"
   on public.visits for insert
   to authenticated
@@ -170,11 +182,13 @@ create index if not exists redemptions_customer_idx on public.redemptions (custo
 
 alter table public.redemptions enable row level security;
 
+drop policy if exists "Staff can view redemptions" on public.redemptions;
 create policy "Staff can view redemptions"
   on public.redemptions for select
   to authenticated
   using (true);
 
+drop policy if exists "Staff can log redemptions" on public.redemptions;
 create policy "Staff can log redemptions"
   on public.redemptions for insert
   to authenticated
@@ -185,7 +199,7 @@ create policy "Staff can log redemptions"
 --    never drift from a half-finished request.
 -- ----------------------------------------------------------------------------
 
--- Record a visit: 1 point per $10 spent (rounded down), credited instantly.
+-- Record a visit: 1 point per ₹10 spent (rounded down), credited instantly.
 create or replace function public.record_visit(
   p_customer_id uuid,
   p_amount_spent numeric,
@@ -293,6 +307,15 @@ select
 from public.visits
 group by customer_id;
 
+-- Per-customer lifetime redemption count — how many rewards they've claimed.
+create or replace view public.customer_redemption_stats
+with (security_invoker = true) as
+select
+  customer_id,
+  count(*) as total_redemptions
+from public.redemptions
+group by customer_id;
+
 -- Flat view combining customers with their stats — avoids relying on
 -- PostgREST relationship-embedding through a view (which isn't reliable
 -- since customer_stats has no real foreign key to customers).
@@ -302,9 +325,11 @@ select
   c.*,
   coalesce(cs.total_visits, 0) as total_visits,
   coalesce(cs.total_points_earned, 0) as total_points_earned,
-  cs.last_visit
+  cs.last_visit,
+  coalesce(rs.total_redemptions, 0) as total_redemptions
 from public.customers c
-left join public.customer_stats cs on cs.customer_id = c.id;
+left join public.customer_stats cs on cs.customer_id = c.id
+left join public.customer_redemption_stats rs on rs.customer_id = c.id;
 
 -- Top N most loyal customers, ranked by visit frequency then points balance.
 create or replace function public.top_loyal_customers(p_limit integer default 5)

@@ -178,6 +178,7 @@ export interface Database {
           total_visits: number;
           total_points_earned: number;
           last_visit: string | null;
+          total_redemptions: number;
         };
         Relationships: [];
       };

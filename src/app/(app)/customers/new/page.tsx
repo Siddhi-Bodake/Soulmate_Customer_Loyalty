@@ -14,7 +14,7 @@ export default function NewCustomerPage() {
           title="How the program works"
           items={[
             { icon: Timer, text: "Only a name and phone number are required — takes under a minute at the counter." },
-            { icon: Coins, text: "They'll earn 1 point for every $10 spent, credited the moment a visit is recorded." },
+            { icon: Coins, text: "They'll earn 1 point for every ₹10 spent, credited the moment a visit is recorded." },
             { icon: Gift, text: "Once they have enough points, redeem a reward for them right from their profile." },
           ]}
         />

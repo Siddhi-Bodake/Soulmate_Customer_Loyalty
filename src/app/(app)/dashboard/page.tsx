@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Users, Sparkles, Trophy, ReceiptText } from "lucide-react";
+import { Users, Sparkles, Trophy, ReceiptText, Gift } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,27 +11,31 @@ export const dynamic = "force-dynamic";
 async function getDashboardData() {
   const supabase = await createClient();
 
-  const [customersCount, pointsIssued, topCustomers, visitTrend] = await Promise.all([
-    supabase.from("customers").select("*", { count: "exact", head: true }),
-    supabase.from("visits").select("points_earned"),
-    supabase.rpc("top_loyal_customers", { p_limit: 5 }),
-    supabase.rpc("visits_last_7_days"),
-  ]);
+  const [customersCount, pointsIssued, redemptionsCount, topCustomers, visitTrend] =
+    await Promise.all([
+      supabase.from("customers").select("*", { count: "exact", head: true }),
+      supabase.from("visits").select("points_earned"),
+      supabase.from("redemptions").select("*", { count: "exact", head: true }),
+      supabase.rpc("top_loyal_customers", { p_limit: 5 }),
+      supabase.rpc("visits_last_7_days"),
+    ]);
 
   const totalCustomers = customersCount.count ?? 0;
   const totalPointsIssued =
     pointsIssued.data?.reduce((sum, v) => sum + v.points_earned, 0) ?? 0;
+  const totalRewardsRedeemed = redemptionsCount.count ?? 0;
 
   return {
     totalCustomers,
     totalPointsIssued,
+    totalRewardsRedeemed,
     topCustomers: topCustomers.data ?? [],
     visitTrend: visitTrend.data ?? [],
   };
 }
 
 export default async function DashboardPage() {
-  const { totalCustomers, totalPointsIssued, topCustomers, visitTrend } =
+  const { totalCustomers, totalPointsIssued, totalRewardsRedeemed, topCustomers, visitTrend } =
     await getDashboardData();
 
   return (
@@ -47,7 +51,7 @@ export default async function DashboardPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-4 pt-6">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent">
@@ -76,7 +80,21 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="sm:col-span-2 lg:col-span-1">
+        <Card>
+          <CardContent className="flex items-center gap-4 pt-6">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent">
+              <Gift className="h-6 w-6 text-accent-foreground" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Rewards Redeemed</p>
+              <p className="font-heading text-3xl font-bold tabular-nums">
+                {totalRewardsRedeemed.toLocaleString()}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardContent className="flex items-center gap-4 pt-6">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent">
               <Trophy className="h-6 w-6 text-accent-foreground" />

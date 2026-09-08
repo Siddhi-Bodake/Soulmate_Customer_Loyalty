@@ -94,6 +94,21 @@ export default async function CustomerProfilePage({
             <p className="text-sm font-medium text-muted-foreground">Points Balance</p>
             <PointsDisplay points={customer.points_balance} size="xl" className="mt-1" />
 
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-accent/50 px-3 py-2.5">
+                <p className="font-heading text-xl font-bold tabular-nums">
+                  {visits?.length ?? 0}
+                </p>
+                <p className="text-xs font-medium text-muted-foreground">Total Visits</p>
+              </div>
+              <div className="rounded-xl bg-secondary/60 px-3 py-2.5">
+                <p className="font-heading text-xl font-bold tabular-nums">
+                  {redemptions?.length ?? 0}
+                </p>
+                <p className="text-xs font-medium text-muted-foreground">Rewards Claimed</p>
+              </div>
+            </div>
+
             <div className="mt-6 space-y-3 border-t border-border pt-4 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Phone className="h-4 w-4" /> {customer.phone}
@@ -145,7 +160,7 @@ export default async function CustomerProfilePage({
                     <div>
                       <p className="text-sm font-semibold">
                         {entry.type === "visit"
-                          ? `Visit — $${entry.amount_spent.toFixed(2)} spent`
+                          ? `Visit — ₹${entry.amount_spent.toFixed(2)} spent`
                           : `Redeemed — ${entry.reward_name}`}
                       </p>
                       <p className="text-xs text-muted-foreground">

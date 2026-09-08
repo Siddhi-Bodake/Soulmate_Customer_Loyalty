@@ -81,7 +81,7 @@ export function RecordVisitForm({
           <Label htmlFor="amount">Amount Spent</Label>
           <div className="relative">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xl font-semibold text-muted-foreground">
-              $
+              ₹
             </span>
             <Input
               id="amount"
@@ -96,7 +96,7 @@ export function RecordVisitForm({
           {validAmount && (
             <p className="flex items-center gap-1.5 text-sm font-medium text-primary">
               <Sparkles className="h-4 w-4" />
-              Earns {projectedPoints} point{projectedPoints === 1 ? "" : "s"} (1 pt per $10)
+              Earns {projectedPoints} point{projectedPoints === 1 ? "" : "s"} (1 pt per ₹10)
             </p>
           )}
         </div>

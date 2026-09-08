@@ -63,6 +63,7 @@ export default async function CustomersPage({
                   <TableHead>Phone</TableHead>
                   <TableHead className="text-right">Points</TableHead>
                   <TableHead className="text-right">Visits</TableHead>
+                  <TableHead className="text-right">Rewards Claimed</TableHead>
                   <TableHead>Member Since</TableHead>
                   <TableHead className="text-right">Quick Action</TableHead>
                 </TableRow>
@@ -82,6 +83,9 @@ export default async function CustomersPage({
                     <TableCell className="text-right tabular-nums text-muted-foreground">
                       {c.total_visits}
                     </TableCell>
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                      {c.total_redemptions}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {format(new Date(c.joined_date), "MMM d, yyyy")}
                     </TableCell>
@@ -100,7 +104,7 @@ export default async function CustomersPage({
                 ))}
                 {(customers ?? []).length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                       No customers found.
                     </TableCell>
                   </TableRow>
