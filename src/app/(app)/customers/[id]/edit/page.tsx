@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { PointsDisplay } from "@/components/points-display";
+import { BackLink } from "@/components/back-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CustomerForm } from "../../customer-form";
@@ -29,6 +30,7 @@ export default async function EditCustomerPage({
 
   return (
     <div>
+      <BackLink href={`/customers/${id}`} label="Back to Profile" />
       <PageHeader title="Edit Customer" />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,32rem)_1fr]">
         <CustomerForm

@@ -1,12 +1,14 @@
 import { Coins, Gift, Timer } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { FormTips } from "@/components/form-tips";
+import { BackLink } from "@/components/back-link";
 import { CustomerForm } from "../customer-form";
 import { createCustomer } from "../actions";
 
 export default function NewCustomerPage() {
   return (
     <div>
+      <BackLink href="/customers" label="Back to Customers" />
       <PageHeader title="Add Customer" description="A minute to set up, a lifetime of coffee." />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,32rem)_1fr]">
         <CustomerForm action={createCustomer} submitLabel="Add Customer" />
