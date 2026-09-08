@@ -9,6 +9,7 @@ import { PointsDisplay } from "@/components/points-display";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DeleteCustomerButton } from "./delete-customer-button";
 
 export const dynamic = "force-dynamic";
@@ -60,6 +61,9 @@ export default async function CustomerProfilePage({
       staff: r.profiles?.full_name ?? null,
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const visitEntries = timeline.filter((e) => e.type === "visit");
+  const redemptionEntries = timeline.filter((e) => e.type === "redemption");
 
   return (
     <div>
@@ -134,53 +138,79 @@ export default async function CustomerProfilePage({
 
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Visit &amp; Points History</CardTitle>
+            <CardTitle>Visit &amp; Rewards History</CardTitle>
           </CardHeader>
           <CardContent>
-            {timeline.length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                No activity yet — record their first visit to get started.
-              </p>
-            )}
-            <ul className="divide-y divide-border">
-              {timeline.map((entry) => (
-                <li key={`${entry.type}-${entry.id}`} className="flex items-center justify-between gap-3 py-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                        entry.type === "visit" ? "bg-accent" : "bg-secondary"
-                      }`}
-                    >
-                      {entry.type === "visit" ? (
-                        <Coffee className="h-4 w-4 text-accent-foreground" />
-                      ) : (
-                        <Gift className="h-4 w-4 text-secondary-foreground" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">
-                        {entry.type === "visit"
-                          ? `Visit — ₹${entry.amount_spent.toFixed(2)} spent`
-                          : `Redeemed — ${entry.reward_name}`}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(entry.date), "MMM d, yyyy 'at' h:mm a")}
-                        {entry.staff ? ` · ${entry.staff}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge
-                    variant={entry.type === "visit" ? "default" : "secondary"}
-                    className="shrink-0 tabular-nums"
-                  >
-                    {entry.type === "visit" ? `+${entry.points_earned}` : `-${entry.points_used}`} pts
-                  </Badge>
-                </li>
-              ))}
-            </ul>
+            <Tabs defaultValue="all">
+              <TabsList>
+                <TabsTrigger value="all">All ({timeline.length})</TabsTrigger>
+                <TabsTrigger value="visits">Visits ({visitEntries.length})</TabsTrigger>
+                <TabsTrigger value="rewards">Rewards Claimed ({redemptionEntries.length})</TabsTrigger>
+              </TabsList>
+              <TabsContent value="all" className="mt-4">
+                <TimelineList entries={timeline} emptyText="No activity yet — record their first visit to get started." />
+              </TabsContent>
+              <TabsContent value="visits" className="mt-4">
+                <TimelineList entries={visitEntries} emptyText="No visits recorded yet." />
+              </TabsContent>
+              <TabsContent value="rewards" className="mt-4">
+                <TimelineList entries={redemptionEntries} emptyText="No rewards claimed yet." />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
     </div>
+  );
+}
+
+function TimelineList({
+  entries,
+  emptyText,
+}: {
+  entries: TimelineEntry[];
+  emptyText: string;
+}) {
+  if (entries.length === 0) {
+    return <p className="py-8 text-center text-sm text-muted-foreground">{emptyText}</p>;
+  }
+
+  return (
+    <ul className="divide-y divide-border">
+      {entries.map((entry) => (
+        <li key={`${entry.type}-${entry.id}`} className="flex items-center justify-between gap-3 py-3">
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                entry.type === "visit" ? "bg-accent" : "bg-secondary"
+              }`}
+            >
+              {entry.type === "visit" ? (
+                <Coffee className="h-4 w-4 text-accent-foreground" />
+              ) : (
+                <Gift className="h-4 w-4 text-secondary-foreground" />
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-semibold">
+                {entry.type === "visit"
+                  ? `Visit — ₹${entry.amount_spent.toFixed(2)} spent`
+                  : `Redeemed — ${entry.reward_name}`}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {format(new Date(entry.date), "MMM d, yyyy 'at' h:mm a")}
+                {entry.staff ? ` · ${entry.staff}` : ""}
+              </p>
+            </div>
+          </div>
+          <Badge
+            variant={entry.type === "visit" ? "default" : "secondary"}
+            className="shrink-0 tabular-nums"
+          >
+            {entry.type === "visit" ? `+${entry.points_earned}` : `-${entry.points_used}`} pts
+          </Badge>
+        </li>
+      ))}
+    </ul>
   );
 }

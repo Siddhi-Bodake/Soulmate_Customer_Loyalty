@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { format } from "date-fns";
-import { UserPlus, ReceiptText } from "lucide-react";
+import { UserPlus, ReceiptText, Eye } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -65,7 +65,7 @@ export default async function CustomersPage({
                   <TableHead className="text-right">Visits</TableHead>
                   <TableHead className="text-right">Rewards Claimed</TableHead>
                   <TableHead>Member Since</TableHead>
-                  <TableHead className="text-right">Quick Action</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -90,15 +90,26 @@ export default async function CustomersPage({
                       {format(new Date(c.joined_date), "MMM d, yyyy")}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        render={<Link href={`/visits/new?customer=${c.id}`} />}
-                        nativeButton={false}
-                        variant="ghost"
-                        size="sm"
-                      >
-                        <ReceiptText className="h-4 w-4" />
-                        Record Visit
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          render={<Link href={`/customers/${c.id}`} />}
+                          nativeButton={false}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View
+                        </Button>
+                        <Button
+                          render={<Link href={`/visits/new?customer=${c.id}`} />}
+                          nativeButton={false}
+                          variant="ghost"
+                          size="sm"
+                        >
+                          <ReceiptText className="h-4 w-4" />
+                          Record Visit
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
