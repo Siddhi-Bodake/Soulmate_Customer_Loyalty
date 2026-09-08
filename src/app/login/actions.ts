@@ -9,16 +9,39 @@ export async function signIn(_prevState: unknown, formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "/dashboard");
+  const mode = String(formData.get("mode") ?? "owner");
 
   if (!email || !password) {
     return { error: "Enter your email and password." };
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data: signInData, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-  if (error) {
+  if (error || !signInData.user) {
     return { error: "Incorrect email or password." };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", signInData.user.id)
+    .single();
+
+  if (!profile) {
+    await supabase.auth.signOut();
+    return { error: "No staff profile is set up for this account yet." };
+  }
+
+  // The tab picked on the login screen must match the account's real role —
+  // an Owner account can't sign in through the Staff tab, and vice versa.
+  if (profile.role !== mode) {
+    await supabase.auth.signOut();
+    const correctTab = profile.role === "owner" ? "Owner Login" : "Staff Login";
+    return { error: `This is a ${profile.role} account — please use ${correctTab} instead.` };
   }
 
   // Marks when this login started, so middleware can force a fresh sign-in

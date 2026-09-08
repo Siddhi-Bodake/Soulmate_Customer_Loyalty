@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { Crown, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { LoginMode } from "./login-panel";
 
 const MODES = {
   owner: {
@@ -17,8 +17,13 @@ const MODES = {
   },
 } as const;
 
-export function LoginHeader() {
-  const [mode, setMode] = useState<"owner" | "staff">("owner");
+export function LoginHeader({
+  mode,
+  onModeChange,
+}: {
+  mode: LoginMode;
+  onModeChange: (mode: LoginMode) => void;
+}) {
   const { icon: Icon, title, description } = MODES[mode];
 
   return (
@@ -35,7 +40,7 @@ export function LoginHeader() {
           <button
             key={key}
             type="button"
-            onClick={() => setMode(key)}
+            onClick={() => onModeChange(key)}
             className={cn(
               "flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-sm font-medium transition-colors",
               mode === key

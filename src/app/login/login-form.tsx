@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { signIn } from "./actions";
+import type { LoginMode } from "./login-panel";
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({ next, mode }: { next?: string; mode: LoginMode }) {
   const [state, formAction, pending] = useActionState(signIn, undefined);
 
   return (
@@ -15,6 +16,7 @@ export function LoginForm({ next }: { next?: string }) {
       <CardContent className="pt-6">
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="next" value={next ?? "/dashboard"} />
+          <input type="hidden" name="mode" value={mode} />
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -40,7 +42,7 @@ export function LoginForm({ next }: { next?: string }) {
             <p className="text-sm font-medium text-destructive">{state.error}</p>
           )}
           <Button type="submit" className="w-full" size="lg" disabled={pending}>
-            {pending ? "Signing in…" : "Sign in"}
+            {pending ? "Signing in…" : `Sign in as ${mode === "owner" ? "Owner" : "Staff"}`}
           </Button>
         </form>
       </CardContent>
