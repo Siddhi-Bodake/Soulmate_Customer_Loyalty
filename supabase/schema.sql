@@ -120,6 +120,10 @@ create table if not exists public.rewards (
   created_at timestamptz not null default now()
 );
 
+-- Guarantees the starter-rewards insert below can never duplicate itself
+-- on a re-run (this is also what makes "on conflict (name)" work).
+create unique index if not exists rewards_name_key on public.rewards (name);
+
 alter table public.rewards enable row level security;
 
 drop policy if exists "Staff can view rewards" on public.rewards;
@@ -385,7 +389,7 @@ insert into public.rewards (name, points_required) values
   ('10% Off Order', 100),
   ('Free Pastry', 75),
   ('Free Lunch Combo', 200)
-on conflict do nothing;
+on conflict (name) do nothing;
 
 -- ----------------------------------------------------------------------------
 -- 9. BOOTSTRAP YOUR FIRST OWNER ACCOUNT
